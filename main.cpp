@@ -129,7 +129,7 @@ int main( int argc, char * argv[] ){
             while(e->type != SDL_KEYDOWN) {
                 SDL_PollEvent(e);
             }
-            if(e->type != 0)
+            if(e->key.keysym.sym == SDLK_0)
                 break;
         }
         while(e->type != SDL_KEYDOWN) {
@@ -237,12 +237,12 @@ void print_asli(){
                 break;
         }
         jadid.rang = rang;
-        if(x+d >= 1300) {
+        if(x+d > 1300) {
             d = -d;
             y += 50;
             radif++;
         }
-        else if(x+d <= 300) {
+        else if(x+d < 300) {
             d = -d;
             y += 50;
             radif++;
