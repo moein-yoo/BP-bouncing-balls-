@@ -168,63 +168,6 @@ int main( int argc, char * argv[] ){
     return 0;
 }
 
-void print_asl(){
-    int x = 0,y = 25;
-    int d = 50,k = rand()%3,rang = rand()%5;
-    int radif = 0;
-    while(radif < K*6) {
-        if(k!=0) {
-            k--;
-        }
-        else{
-            k = rand()%3;
-            rang = rand()%5;
-        }
-        switch (rang){
-            case 0:
-                rang = rang0;
-                break;
-            case 1:
-                rang = rang1;
-                break;
-            case 2:
-                rang = rang2;
-                break;
-            case 3:
-                rang = rang3;
-                break;
-            case 4:
-                rang = rang4;
-            default:
-                break;
-        }
-        top[x][y].rang = rang;
-        cout << "log";
-        top[x][y].vojood = true;
-        if(x+d > 1000) {
-            d = -d;
-            y += 50;
-            radif++;
-        }
-        else if(x+d < 0) {
-            d = -d;
-            y += 50;
-            radif++;
-        }
-        else{
-            x += d;
-        }
-    }
-    SDL_SetRenderTarget(m_renderer,NULL);
-    for (int i = 0; i < 1000; i+=50) {
-        for (int j = 0; j < 1000; j+=50) {
-            if(top[i][j].vojood == true)
-                filledCircleColor(m_renderer,i+300,j,radious,top[i][j].rang);
-            SDL_RenderPresent(m_renderer);
-        }
-        //SDL_Delay(50);
-    }
-}
 
 void print_asli(){
     int x = 300,y = 25;
