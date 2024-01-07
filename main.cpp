@@ -15,21 +15,23 @@ SDL_Event *e = new SDL_Event();
 float K = 1;
 int W = K*1600, H = K*900;
 int radious = 25;
+int tedadhazf = 0;int maxY = 25;
 int rang0 = 0xffff9000; int rang1 = 0xff0090ff; int rang2 = 0xff9000ff; int rang3 = 0xff90ff00;int rang4 = 0xff00ff90;
 
 struct ball{
     int x,y;
     int rang;
     bool gofl;
+    bool flagcheck;
 };vector<ball> toop;
 
 struct bal{
     int rang;
     bool flagcheck;
     bool vojood;
-};bal top[1355][1055];
+};bal top[1355][1055];bal hazfi[1355][1055];
 
-vector<int> hazfi;
+vector<int> hazfii;
 void print_asli();
 void print_asl();
 void print_top();
@@ -66,8 +68,16 @@ int main( int argc, char * argv[] ){
         while(bazi){
             ball shoot;
             e->type = 0;
-            while(e->type != SDL_MOUSEBUTTONDOWN)
+            while(e->type != SDL_MOUSEBUTTONDOWN) {
+                if(e->key.keysym.sym == SDLK_0) {
+                    bazi = false;
+                    break;
+                }
                 SDL_PollEvent(e);
+                print_top();
+            }
+            if(!bazi)
+                break;
             int x,y;
             x = e->button.x,y = e->button.y;
             bool f = false;
@@ -123,15 +133,28 @@ int main( int argc, char * argv[] ){
 
             //agar rooye pause ha nabashad
             search_vec(shoot);
+            bool bale = false;
+            if(tedadhazf>2)
+                bale = true;
+            for (int i = 300; i <= 1300; ++i) {
+                for (int j = 0; j < 1000; ++j) {
+                    if(hazfi[i][j].vojood){
+                        top[i][j].vojood = !bale;top[i][j].flagcheck = false;
+                        hazfi[i][j].vojood = false;
+                    }
+                }
+            }
+            tedadhazf = 0;
             print_top();
             //bombing(x,y);
             SDL_RenderPresent(m_renderer);
-            while(e->type != SDL_KEYDOWN) {
-                SDL_PollEvent(e);
-            }
+//            while(e->type != SDL_KEYDOWN) {
+//                SDL_PollEvent(e);
+//            }
             if(e->key.keysym.sym == SDLK_0)
                 break;
         }
+        e->type = 0;
         while(e->type != SDL_KEYDOWN) {
             SDL_PollEvent(e);
         }
@@ -263,44 +286,54 @@ void print_asli(){
 }
 
 void print_top(){
+    SDL_RenderClear(m_renderer);
     SDL_RenderCopy(m_renderer,bkImg,NULL,NULL);
-    for (int i = 0; i <= 1300; i++) {
-        for (int j = 0; j <= 1000; j++) {
+    for (int i = 1300; i > 0; i--) {
+        for (int j = 1000; j >= 0; j--) {
             if(top[i][j].vojood){
-                filledCircleColor(m_renderer,i,j,radious,top[i][j].rang);
+                top[i][j+1].vojood = top[i][j].vojood,top[i][j+1].rang = top[i][j].rang;
+                top[i][j].vojood = false;
+                filledCircleColor(m_renderer,i,j+1,radious,top[i][j+1
+                ].rang);
             }
         }
     }
+    SDL_Delay(100);
+    SDL_RenderPresent(m_renderer);
 }
 
 void search_vec(ball shoot){
     int x = shoot.x,y = shoot.y;
-    top[x][y].vojood = false;
+    hazfi[x][y].vojood = true;
     if(top[x-50][y].vojood && top[x-50][y].rang == shoot.rang && !top[x-50][y].flagcheck){
         ball shoot1;
         top[x-50][y].flagcheck = true;
-        top[x-50][y].vojood = false;
+        hazfi[x-50][y].vojood = true;
+        tedadhazf++;
         shoot1.x = x-50; shoot1.y = y;shoot1.rang = top[x-50][y].rang;
         search_vec(shoot1);
     }
     if(top[x+50][y].vojood && top[x+50][y].rang == shoot.rang && !top[x+50][y].flagcheck){
         ball shoot1;
         top[x+50][y].flagcheck = true;
-        top[x+50][y].vojood = false;
+        hazfi[x+50][y].vojood = true;
+        tedadhazf++;
         shoot1.x = x+50; shoot1.y = y;shoot1.rang = top[x+50][y].rang;
         search_vec(shoot1);
     }
     if(top[x][y-50].vojood && top[x][y-50].rang == shoot.rang && !top[x][y-50].flagcheck){
         ball shoot1;
         top[x][y-50].flagcheck = true;
-        top[x][y-50].vojood = false;
+        hazfi[x][y-50].vojood = true;
+        tedadhazf++;
         shoot1.x = x; shoot1.y = y-50;shoot1.rang = top[x][y-50].rang;
         search_vec(shoot1);
     }
     if(top[x][y+50].vojood && top[x][y+50].rang == shoot.rang && !top[x][y+50].flagcheck){
         ball shoot1;
         top[x][y+50].flagcheck = true;
-        top[x][y+50].vojood = false;
+        hazfi[x][y+50].vojood = true;
+        tedadhazf++;
         shoot1.x = x; shoot1.y = y+50;shoot1.rang = top[x][y+50].rang;
         search_vec(shoot1);
     }
