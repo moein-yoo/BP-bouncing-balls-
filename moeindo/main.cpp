@@ -7,6 +7,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
+#include <conio.h>
 
 using namespace std;
 SDL_Window * m_window;
@@ -27,7 +28,7 @@ SDL_Texture *game_over_page = nullptr;
 SDL_Texture *infinity_mode = nullptr;   SDL_Texture *timer_mode = nullptr;  SDL_Texture *normal_mode = nullptr;
 SDL_Texture *setting_page_scoreboard = nullptr; SDL_Texture *setting_page_change_music = nullptr; SDL_Texture *setting_page_sound_off = nullptr;
 SDL_Texture *setting_page_sound_on = nullptr;SDL_Texture *setting_page_volume = nullptr;
-
+SDL_Texture *cannon_img = nullptr;
 Mix_Music *game_over_music = nullptr;   Mix_Music *soundnum0 = nullptr; Mix_Music *soundnum1 = nullptr;
 Mix_Music *soundnum2 = nullptr; Mix_Music *soundnum3 = nullptr;
 
@@ -37,7 +38,8 @@ int W = K*1600, H = K*900;
 double radious = 25;
 int tedadhazf = 0;int maxY = 25;
 int rang0 = 0xffff9000; int rang1 = 0xff0090ff; int rang2 = 0xff9000ff; int rang3 = 0xff90ff00;int rang4 = 0xff00ff90;
-bool sound = true;int soundnum = 0;int volumee = 64;
+bool sound = true;int soundnum = 2;int volumee = 64;string username;
+double dx,dy;int x,y;
 
 struct ball{
     int x,y;
@@ -65,6 +67,8 @@ void chase_mouse_run(int x,int y);
 void exit_page(bool x);
 void game_over();
 void sound_play();
+void check_char();
+double cannon_angle(double x,double y);
 
 //############*************  MOEIN  *************##############
 bool bazi = true, running = true, bazi_infinity = false, bazi_normal = true, bazi_timer = false, gameover = false;
@@ -86,52 +90,52 @@ int main( int argc, char * argv[] ){
     stringColor(m_renderer,200,200,"Try another one",0xFFFFFFFF);
     SDL_SetRenderTarget(m_renderer,nullptr);
 
-    menu_img = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\main_menu.jpg)");
-    menu_img_login = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\login3.png)");
-    menu_img_setting = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\settings.png)");
-    menu_img_sign_up = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\sign_up.png)");
-    menu_img_start = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\start.png)");
-    menu_img_help_desk = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\help_desk.png)");
-    game_page = IMG_LoadTexture(m_renderer,R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\G2PTeO.jpg)");
-    exit_img = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\exit.png)");
-    login_page = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\login_page.jpg)");
-    sign_up_page = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\sign_up_page.jpg)");
-    setting_page = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\setting_page.jpg)");
-    mode_page = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\mode_page.jpg)");
-    game_over_page = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\game_over_page.png)");
-    infinity_mode = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\infinity_mode.png)");
-    timer_mode = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\timer_mode.png)");
-    normal_mode = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\normal_mode.png)");
-    setting_page_volume = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\volume.png)");
-    setting_page_sound_on = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\sound_on.png)");
-    setting_page_sound_off = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\sound_off.png)");
-    setting_page_scoreboard = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\scoreboard.png)");
-    setting_page_change_music = IMG_LoadTexture(m_renderer, R"(C:\Users\moein\Desktop\SUT\BP\project\aks ha\change_music.png)");
+    menu_img = IMG_LoadTexture(m_renderer,R"(aks ha\main_menu.jpg)");
+    menu_img_login = IMG_LoadTexture(m_renderer,R"(aks ha\login3.png)");
+    menu_img_setting = IMG_LoadTexture(m_renderer,R"(aks ha\settings.png)");
+    menu_img_sign_up = IMG_LoadTexture(m_renderer,R"(aks ha\sign_up.png)");
+    menu_img_start = IMG_LoadTexture(m_renderer,R"(aks ha\start.png)");
+    menu_img_help_desk = IMG_LoadTexture(m_renderer,R"(aks ha\help_desk.png)");
+    game_page = IMG_LoadTexture(m_renderer,R"(aks ha\G2PTeO.jpg)");
+    exit_img = IMG_LoadTexture(m_renderer, R"(aks ha\exit.png)");
+    login_page = IMG_LoadTexture(m_renderer, R"(aks ha\login_page.jpg)");
+    sign_up_page = IMG_LoadTexture(m_renderer, R"(aks ha\sign_up_page.jpg)");
+    setting_page = IMG_LoadTexture(m_renderer, R"(aks ha\setting_page.jpg)");
+    mode_page = IMG_LoadTexture(m_renderer, R"(aks ha\mode_page.jpg)");
+    game_over_page = IMG_LoadTexture(m_renderer, R"(aks ha\game_over_page.png)");
+    infinity_mode = IMG_LoadTexture(m_renderer, R"(aks ha\infinity_mode.png)");
+    timer_mode = IMG_LoadTexture(m_renderer, R"(aks ha\timer_mode.png)");
+    normal_mode = IMG_LoadTexture(m_renderer, R"(aks ha\normal_mode.png)");
+    setting_page_volume = IMG_LoadTexture(m_renderer, R"(aks ha\volume.png)");
+    setting_page_sound_on = IMG_LoadTexture(m_renderer, R"(aks ha\sound_on.png)");
+    setting_page_sound_off = IMG_LoadTexture(m_renderer, R"(aks ha\sound_off.png)");
+    setting_page_scoreboard = IMG_LoadTexture(m_renderer, R"(aks ha\scoreboard.png)");
+    setting_page_change_music = IMG_LoadTexture(m_renderer, R"(aks ha\change_music.png)");
+    cannon_img = IMG_LoadTexture(m_renderer, R"(aks ha\cannon.png)");
 
-    game_over_music = Mix_LoadMUS(R"(C:\Users\moein\Desktop\SUT\BP\project\music ha\game_over_music.mp3)");
-    soundnum0 = Mix_LoadMUS(R"(C:\Users\moein\Desktop\SUT\BP\project\music ha\soundnum0.mp3)");
-    soundnum1 = Mix_LoadMUS(R"(C:\Users\moein\Desktop\SUT\BP\project\music ha\soundnum1.mp3)");
-    soundnum2 = Mix_LoadMUS(R"(C:\Users\moein\Desktop\SUT\BP\project\music ha\soundnum2.mp3)");
-    soundnum3 = Mix_LoadMUS(R"(C:\Users\moein\Desktop\SUT\BP\project\music ha\soundnum3.mp3)");
+    game_over_music = Mix_LoadMUS(R"(music ha\game_over_music.mp3)");
+    soundnum0 = Mix_LoadMUS(R"(music ha\soundnum0.mp3)");
+    soundnum1 = Mix_LoadMUS(R"(music ha\soundnum1.mp3)");
+    soundnum2 = Mix_LoadMUS(R"(music ha\soundnum2.mp3)");
+    soundnum3 = Mix_LoadMUS(R"(music ha\soundnum3.mp3)");
     sound_play();
     sound = true;
 
     while(running){
-        if (sound && !Mix_PlayingMusic()) {
-            soundnum = (soundnum + 1) % 4;
-            sound_play();
-        }
         bazi_infinity=false;bazi_normal = false;bazi_timer = false;bazi = false;
         e->type = 0;
         toop.clear();
         print_asli();
         main_menu();
         while(e->type != SDL_MOUSEBUTTONDOWN && e->type != SDL_KEYDOWN) {
+            if (sound && !Mix_PlayingMusic()) {
+                soundnum = (soundnum + 1) % 4;
+                sound_play();
+            }
             SDL_PollEvent(e);
         }
         if(e->type == SDL_QUIT)
             break;
-        int x,y;
         x = e->button.x,y = e->button.y;
         chase_mouse_menu(x,y);
         if(!running)
@@ -145,16 +149,20 @@ int main( int argc, char * argv[] ){
             }
             e->type = 0;
             while(e->type != SDL_MOUSEBUTTONDOWN) {
+                if (sound && !Mix_PlayingMusic()) {
+                    soundnum = (soundnum + 1) % 4;
+                    sound_play();
+                }
                 if (e->key.keysym.sym == SDLK_0) {
                     bazi = false;
                     break;
                 }
                 SDL_PollEvent(e);
                 print_top();
-                if (sound && !Mix_PlayingMusic()) {
-                    soundnum = (soundnum + 1) % 4;
-                    sound_play();
-                }
+                x = e->button.x;
+                y = e->button.y;
+                //dx = (x - W / 2) * -5 / (y - H);
+
                 if(maxY > 675){
                     break;
                 }
@@ -239,7 +247,7 @@ int main( int argc, char * argv[] ){
 
 //############*************  MOEIN  *************##############
 void print_asli(){
-    int x = 325,y = 390;
+    int x = 325,y = 0;
     int d = 50,k = rand()%3,rang = rand()%5;
     ball jadid{};
     int radif = 0;
@@ -379,6 +387,17 @@ void game_render(){
     SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
     SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
     SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
+    int w_cannon_img,h_cannon_img;
+    SDL_QueryTexture(cannon_img, NULL, NULL, &w_cannon_img, &h_cannon_img);
+    SDL_Rect img_rect;
+    img_rect.x = 750;
+    img_rect.y = 800;
+    img_rect.w = w_cannon_img;
+    img_rect.h = h_cannon_img;
+    SDL_Point center = {img_rect.w / 2, img_rect.h};
+    SDL_RenderCopyEx(m_renderer, cannon_img, NULL, &img_rect, cannon_angle(x, y), &center, SDL_FLIP_NONE);
+
+
     //SDL_RenderPresent(m_renderer);
 
 }
@@ -419,16 +438,44 @@ void chase_mouse_run(int x,int y){
         exit_page(false);
     }
 }
-void login(){
-    SDL_RenderClear(m_renderer);
-    int w,h;
-    SDL_QueryTexture(login_page,nullptr,nullptr,&w,&h);
+void login() {
+    bool exiting_mode = false;
+    int w, h;
+    SDL_QueryTexture(login_page, nullptr, nullptr, &w, &h);
     SDL_Rect login_page_rect; login_page_rect.x = 0; login_page_rect.y = 0; login_page_rect.w = 1600; login_page_rect.h = 900;
-    SDL_RenderCopy(m_renderer,login_page,nullptr,&login_page_rect);
+    int w_exit, h_exit;
+    SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
+    SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
+    SDL_RenderClear(m_renderer);
+    SDL_RenderCopy(m_renderer, login_page, nullptr, &login_page_rect);
+    SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
     SDL_RenderPresent(m_renderer);
-    e->type = 0;
-    while(e->type != SDL_KEYDOWN)SDL_PollEvent(e);
-    bazi = false;
+    while(true){
+        e->type = 0;
+        while (e->type != SDL_KEYDOWN)
+            SDL_PollEvent(e);
+        if(e->key.keysym.sym != SDLK_TAB) {
+            check_char();
+        }
+        else
+            break;
+        SDL_RenderClear(m_renderer);
+        SDL_RenderCopy(m_renderer, login_page, nullptr, &login_page_rect);
+        SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
+        textRGBA(m_renderer,600,100,username.c_str(),2,30,150,50,50,255);
+        SDL_RenderPresent(m_renderer);
+    }
+    do {
+        e->type = 0;
+        while (e->type != SDL_MOUSEBUTTONDOWN)
+        SDL_PollEvent(e);
+        int x = e->button.x, y = e->button.y;
+        if (x > 1400 && x < 1550 && y > 700 && y < 850) {
+            exit_page(false);
+            exiting_mode = true;
+        }
+    }
+    while(!exiting_mode);
 }
 void setting(){
     SDL_RenderClear(m_renderer);
@@ -545,10 +592,22 @@ void sign_up(){
     SDL_Rect sign_up_page_rect; sign_up_page_rect.x = 0; sign_up_page_rect.y = 0; sign_up_page_rect.w = 1600; sign_up_page_rect.h = 900;
     SDL_SetRenderTarget(m_renderer,menu_img);
     SDL_RenderCopy(m_renderer,sign_up_page,nullptr,&sign_up_page_rect);
+    int w_exit,h_exit;
+    SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
+    SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
+    SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
     SDL_RenderPresent(m_renderer);
-    e->type = 0;
-    while(e->type != SDL_KEYDOWN)SDL_PollEvent(e);
-    bazi = false;
+    bool exiting_mode = false;
+    do {
+        e->type = 0;
+        while (e->type != SDL_MOUSEBUTTONDOWN)
+            SDL_PollEvent(e);
+        int x = e->button.x, y = e->button.y;
+        if (x > 1400 && x < 1550 && y > 700 && y < 850) {
+            exit_page(false);
+            exiting_mode = true;
+        }
+    }while(!exiting_mode);
 }
 void help_desk(){
     bazi = false;
@@ -574,18 +633,198 @@ void game_over(){
 void sound_play(){
     switch (soundnum) {
         case 0:
-            Mix_PlayMusic(soundnum0,0);
+            Mix_PlayMusic(soundnum0,-1);
             break;
         case 1:
-            Mix_PlayMusic(soundnum1,0);
+            Mix_PlayMusic(soundnum1,-1);
             break;
         case 2:
-            Mix_PlayMusic(soundnum2,0);
+            Mix_PlayMusic(soundnum2,-1);
             break;
         case 3:
-            Mix_PlayMusic(soundnum3,0);
+            Mix_PlayMusic(soundnum3,-1);
             break;
     }
 }
-
+void check_char(){
+    switch (e->key.keysym.sym) {
+        case SDLK_0:
+            username += '0';
+            break;
+        case SDLK_1:
+            username += '1';
+            break;
+        case SDLK_2:
+            username += '2';
+            break;
+        case SDLK_3:
+            username += '3';
+            break;
+        case SDLK_4:
+            username += '4';
+            break;
+        case SDLK_5:
+            username += '5';
+            break;
+        case SDLK_6:
+            username += '6';
+            break;
+        case SDLK_7:
+            username += '7';
+            break;
+        case SDLK_8:
+            username += '8';
+            break;
+        case SDLK_9:
+            username += '9';
+            break;
+        case SDLK_BACKSPACE:
+            username.pop_back();
+            break;
+        case SDLK_DELETE:
+            username.pop_back();
+            break;
+        case SDLK_SPACE:
+            username += ' ';
+            break;
+        case SDLK_a:
+            username += 'a';
+            break;
+        case SDLK_b:
+            username += 'b';
+            break;
+        case SDLK_c:
+            username += 'c';
+            break;
+        case SDLK_d:
+            username += 'd';
+            break;
+        case SDLK_e:
+            username += 'e';
+            break;
+        case SDLK_f:
+            username += 'f';
+            break;
+        case SDLK_g:
+            username += 'g';
+            break;
+        case SDLK_h:
+            username += 'h';
+            break;
+        case SDLK_i:
+            username += 'i';
+            break;
+        case SDLK_j:
+            username += 'j';
+            break;
+        case SDLK_k:
+            username += 'k';
+            break;
+        case SDLK_l:
+            username += 'l';
+            break;
+        case SDLK_m:
+            username += 'm';
+            break;
+        case SDLK_n:
+            username += 'n';
+            break;
+        case SDLK_o:
+            username += 'o';
+            break;
+        case SDLK_p:
+            username += 'p';
+            break;
+        case SDLK_q:
+            username += 'q';
+            break;
+        case SDLK_r:
+            username += 'r';
+            break;
+        case SDLK_s:
+            username += 's';
+            break;
+        case SDLK_t:
+            username += 't';
+            break;
+        case SDLK_u:
+            username += 'u';
+            break;
+        case SDLK_v:
+            username += 'v';
+            break;
+        case SDLK_w:
+            username += 'w';
+            break;
+        case SDLK_x:
+            username += 'x';
+            break;
+        case SDLK_y:
+            username += 'y';
+            break;
+        case SDLK_z:
+            username += 'z';
+            break;
+        case SDLK_COMMA:
+            username += ',';
+            break;
+        case SDLK_EQUALS:
+            username += '=';
+            break;
+        case SDLK_LSHIFT:
+            e->type = 0;
+            while(e->type != SDL_KEYDOWN)SDL_PollEvent(e);
+            switch (e->key.keysym.sym) {
+                case SDLK_MINUS:
+                    username += '_';
+                    break;
+                case SDLK_1:
+                    username += '!';
+                    break;
+                case SDLK_2:
+                    username += '@';
+                    break;
+                case SDLK_3:
+                    username += '#';
+                    break;
+                case SDLK_4:
+                    username += '$';
+                    break;
+                case SDLK_5:
+                    username += '%';
+                    break;
+                case SDLK_6:
+                    username += '^';
+                    break;
+                case SDLK_7:
+                    username += '&';
+                    break;
+                case SDLK_8:
+                    username += '*';
+                    break;
+                case SDLK_9:
+                    username += '(';
+                    break;
+                case SDLK_0:
+                    username += ')';
+                    break;
+                case SDLK_EQUALS:
+                    username += '+';
+                    break;
+            }
+    }
+}
 //############*************  MOEIN  *************##############
+
+
+//############*************  EMAD  *************##############
+
+double cannon_angle(double x, double y) {
+    double angle = atan((H-y)/ (x - W/2));
+    if (angle<0) angle+=M_PI;
+    angle*=180;
+    angle/=M_PI;
+    angle=-angle;
+    angle+=90;
+    return angle;
+}
