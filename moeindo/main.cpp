@@ -39,7 +39,7 @@ double radious = 25;
 int tedadhazf = 0;int maxY = 25;
 int rang0 = 0xffff9000; int rang1 = 0xff0090ff; int rang2 = 0xff9000ff; int rang3 = 0xff90ff00;int rang4 = 0xff00ff90;
 bool sound = true;int soundnum = 2;int volumee = 64;string username;
-double dx,dy;int x,y;
+double dx,dy;int x_m,y_m;
 
 struct ball{
     int x,y;
@@ -136,8 +136,8 @@ int main( int argc, char * argv[] ){
         }
         if(e->type == SDL_QUIT)
             break;
-        x = e->button.x,y = e->button.y;
-        chase_mouse_menu(x,y);
+        x_m = e->button.x,y_m = e->button.y;
+        chase_mouse_menu(x_m,y_m);
         if(!running)
             break;
         if(bazi)game_render();
@@ -159,8 +159,8 @@ int main( int argc, char * argv[] ){
                 }
                 SDL_PollEvent(e);
                 print_top();
-                x = e->button.x;
-                y = e->button.y;
+                x_m = e->button.x;
+                y_m = e->button.y;
                 //dx = (x - W / 2) * -5 / (y - H);
 
                 if(maxY > 675){
@@ -173,15 +173,15 @@ int main( int argc, char * argv[] ){
             }
             if(!bazi)
                 break;
-            x = e->button.x,y = e->button.y;
+            x_m = e->button.x,y_m = e->button.y;
             bool run = false;
-            chase_mouse_run(x,y);
+            chase_mouse_run(x_m,y_m);
             if(!bazi)
                 break;
             for (int i = 0; i < toop.size(); ++i) {
-                double fasele = sqrt((x - toop[i].x)*(x - toop[i].x) + (y - toop[i].y)*(y - toop[i].y));
+                double fasele = sqrt((x_m - toop[i].x)*(x_m - toop[i].x) + (y_m - toop[i].y)*(y_m - toop[i].y));
                 if(fasele <= radious){
-                    x = i;
+                    x_m = i;
                     run = true;
                     break;
                 }
@@ -189,7 +189,7 @@ int main( int argc, char * argv[] ){
             if(!run)
                 continue;
             e->type = 0;
-            shoot.x = toop[x].x,shoot.y = toop[x].y,shoot.rang = toop[x].rang;
+            shoot.x = toop[x_m].x,shoot.y = toop[x_m].y,shoot.rang = toop[x_m].rang;
             //mouse harekat
             //barkhord function ke x , y toop shoot shode ra bedahad
 
@@ -247,13 +247,13 @@ int main( int argc, char * argv[] ){
 
 //############*************  MOEIN  *************##############
 void print_asli(){
-    int x = 325,y = 0;
+    int xx = 325,yy = 0;
     int d = 50,k = rand()%3,rang = rand()%5;
     ball jadid{};
     int radif = 0;
     while(radif < K*6) {
-        jadid.x = x;
-        jadid.y = y;
+        jadid.x = xx;
+        jadid.y = yy;
         if(k!=0) {
             k--;
         }
@@ -280,13 +280,13 @@ void print_asli(){
                 break;
         }
         jadid.rang = rang;
-        if(x+d > 1300 || x+d < 300) {
+        if(xx+d > 1300 || xx+d < 300) {
             d = -d;
-            y += 50;
+            yy += 50;
             radif++;
         }
         else{
-            x += d;
+            xx += d;
         }
         jadid.flagcheck = false;
         toop.push_back(jadid);
@@ -302,7 +302,7 @@ void print_top(){
         if(maxY < i.y)
             maxY = i.y;
     }
-    SDL_Delay(70);
+    SDL_Delay(40);
     SDL_RenderPresent(m_renderer);
 }
 
@@ -395,7 +395,7 @@ void game_render(){
     img_rect.w = w_cannon_img;
     img_rect.h = h_cannon_img;
     SDL_Point center = {img_rect.w / 2, img_rect.h};
-    SDL_RenderCopyEx(m_renderer, cannon_img, NULL, &img_rect, cannon_angle(x, y), &center, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(m_renderer, cannon_img, NULL, &img_rect, cannon_angle(x_m, y_m), &center, SDL_FLIP_NONE);
 
 
     //SDL_RenderPresent(m_renderer);
