@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <conio.h>
+#include <chrono>
 #include <fstream>
 
 using namespace std;
@@ -55,7 +56,7 @@ struct ball{
 struct rang {
     int code;
     int v;
-};rang color[5]={{static_cast<int>(0xffff9000),0}, {static_cast<int>(0xff0090ff),0},{static_cast<int>(0xff9000ff), 0},{static_cast<int>(0xff90ff00),0},{static_cast<int>(0xff00ff90),0}};
+};rang color[6]={{static_cast<int>(0xffff9000),0}, {static_cast<int>(0xff0090ff),0},{static_cast<int>(0xff9000ff), 0},{static_cast<int>(0xff90ff00),0},{static_cast<int>(0xff00ff90),0},{static_cast<int>(0xff63637e),0}};
 
 //font=2 -> Arial rounded bold
 //############*************  MOEIN  *************##############
@@ -69,6 +70,7 @@ void main_menu();
 void game_render();
 void login();
 void setting();
+void scoreboard_p();
 void mode();
 void sign_up();
 void help_desk();
@@ -155,7 +157,15 @@ int main( int argc, char * argv[] ){
     while(running){
         bazi_infinity=false;bazi_normal = false;bazi_timer = false;bazi = false;
         e->type = 0;
-        emtiaz = 0;
+        for (int i = 0; i < player_name.size(); ++i) {
+            if(player_name[i] == username) {
+                if (emtiaz == 0)
+                    emtiaz = player_data[0][i];
+                else
+                    player_data[0][i] = emtiaz;
+            }
+
+        }
         toop.clear();
         print_asli();
         main_menu();
@@ -174,7 +184,8 @@ int main( int argc, char * argv[] ){
             break;
         if(bazi)game_render();
         while(bazi){
-            create_shoot();
+            if(shoot.y != 875)
+                create_shoot();
             if (sound && !Mix_PlayingMusic()) {
                 soundnum = (soundnum + 1) % 4;
                 sound_play();
@@ -190,10 +201,14 @@ int main( int argc, char * argv[] ){
                     break;
                 }
                 SDL_PollEvent(e);
+                if(e->type == SDL_MOUSEWHEEL){
+                    e->type = 0;
+                    shoot.rang = color[b].code;
+                    swap(a,b);
+                }
                 print_top();
                 x_m = e->button.x;
                 y_m = e->button.y;
-                //dx = (x - W / 2) * -5 / (y - H);
 
                 if(maxY > 775){
                     break;
@@ -339,6 +354,13 @@ void print_asli(){
             toop[k].gofl = true;
         k = rand()%toop.size();
     }
+    golf = rand()%4+2;
+    k = rand()%toop.size();
+    while(golf--){
+        if(!toop[k].gofl && toop[k].rang != color[5].code && toop[k].y != 20)
+            toop[k].rang = color[5].code;
+        k = rand()%toop.size();
+    }
 }
 
 void print_top(){
@@ -371,6 +393,7 @@ void print_top(){
     }
     int xx = 325;
     while(Miny==25 && xx<=1300 && bazi_infinity){
+        Miny = -25;
         ball jadid;
         int k = rand()%2,rang = rand()%5;
         jadid.x = xx;
@@ -388,6 +411,17 @@ void print_top(){
         jadid.flagcheck = false;
         toop.push_back(jadid);
     }
+    for (int i = 0; i < 5; ++i) {
+        while(shoot.rang==color[i].code && !color[i].v){
+            shoot.rang = color[b].code;
+            a = b;
+            b = rand()%5;
+        }
+    }
+    hlineRGBA(m_renderer,300,1300,Miny-26,126,99,99,255);
+    hlineRGBA(m_renderer,300,1300,800,126,99,99,255);
+    vlineRGBA(m_renderer,300,Miny-26,800,126,99,99,255);
+    vlineRGBA(m_renderer,1300,Miny-26,800,126,99,99,255);
     SDL_Delay(10);
 
     string ss = "Score : "+to_string(emtiaz);
@@ -666,7 +700,7 @@ void login() {
                     SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
                     textRGBA(m_renderer,600,100,"Logged in successfully!",2,30,150,50,50,255);
                     emtiaz = player_data[0][i];
-                    username.clear();
+                    //username.clear();
                     SDL_RenderPresent(m_renderer);
                     m = true;
                     break;
@@ -678,7 +712,7 @@ void login() {
                 SDL_RenderClear(m_renderer);
                 SDL_RenderCopy(m_renderer, login_page, nullptr, &login_page_rect);
                 SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
-                textRGBA(m_renderer,600,100,"Username does not exist😒!",2,30,150,50,50,255);
+                textRGBA(m_renderer,600,100,"Username does not existðŸ˜’!",2,30,150,50,50,255);
                 SDL_RenderPresent(m_renderer);
                 existance = false;
             }
@@ -715,6 +749,7 @@ void login() {
 //    while(!exiting_mode);
 }
 void setting(){
+    while(true) {
     SDL_RenderClear(m_renderer);
     int w,h;
     SDL_QueryTexture(setting_page,nullptr,nullptr,&w,&h);
@@ -745,11 +780,11 @@ void setting(){
     SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
     SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
     SDL_RenderPresent(m_renderer);
-    while(true) {
         e->type = 0;
         while (e->type != SDL_MOUSEBUTTONDOWN)SDL_PollEvent(e);
         int x = e->button.x, y = e->button.y;
         if (x > 300 && x < 300 + w_scoreboard && y > 100 && y < 100 + h_scoreboard) {
+            scoreboard_p();
             exit_page(false);
 
         } else if (x > 600 && x < 600 + w_sound_on && y > 400 && y < 400 + h_sound_on) {
@@ -777,6 +812,36 @@ void setting(){
         }
     }
     bazi = false;
+}
+void scoreboard_p(){
+    SDL_RenderClear(m_renderer);
+    int w,h;
+    SDL_QueryTexture(setting_page,nullptr,nullptr,&w,&h);
+    SDL_Rect setting_page_rect; setting_page_rect.x = 0; setting_page_rect.y = 0; setting_page_rect.w = 1600; setting_page_rect.h = 900;
+    SDL_RenderCopy(m_renderer,setting_page,nullptr,&setting_page_rect);
+    for (int i = 0; i < player_name.size(); ++i) {
+        if(player_name[i].empty())
+            continue;
+        string tt = player_name[i];
+        textRGBA(m_renderer,200,i*50+50,tt.c_str(),2,40,126,99,99,255);
+        tt = to_string(player_data[0][i]);
+        textRGBA(m_renderer,700,i*50+50,tt.c_str(),2,40,126,99,99,255);
+    }
+    int w_exit,h_exit;
+    SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
+    SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
+    SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
+    SDL_RenderPresent(m_renderer);
+    while(true) {
+        e->type = 0;
+        while (e->type != SDL_MOUSEBUTTONDOWN)SDL_PollEvent(e);
+        int x = e->button.x, y = e->button.y;
+        if (x > 1400 && x < 1550 && y > 700 && y < 850) {
+            //exit_page(false);
+            break;
+        }
+    }
+
 }
 void mode() {
     SDL_RenderClear(m_renderer);
@@ -881,7 +946,7 @@ void sign_up(){
                 textRGBA(m_renderer,600,100,"Username created!",2,30,150,50,50,255);
                 if(!username.empty()) {
                     player_name.push_back(username);
-                    username.clear();
+                //    username.clear();
                     player_data[0].push_back(0);
                     player_data[1].push_back(0);
                 }
@@ -926,8 +991,12 @@ void game_over(){
     SDL_Rect game_over_page_rect; game_over_page_rect.x = 0; game_over_page_rect.y = 0; game_over_page_rect.w = 1600; game_over_page_rect.h = 900;
     SDL_RenderCopy(m_renderer, game_over_page, nullptr, &game_over_page_rect);
     Mix_PlayMusic(game_over_music, 0);
-    string ss = "Your score is "+to_string(emtiaz);
-    textRGBA(m_renderer,600,100,ss.c_str(),2,40,150,50,50,255);
+    for (int i = 0; i < player_name.size(); ++i) {
+        if(username == player_name[i])
+            emtiaz = player_data[0][i];
+    };
+//    string ss = "Your score is "+to_string(emtiaz);
+//    textRGBA(m_renderer,600,100,ss.c_str(),2,40,150,50,50,255);
     SDL_RenderPresent(m_renderer);
     while(Mix_PlayingMusic());
     gameover = true;
@@ -1200,6 +1269,8 @@ void hit() {
         if(shoot.y<=Miny) {
             clicked = false;
             shoot.y = Miny;
+            shoot.flagcheck = false;
+            toop.push_back(shoot);
         }
         if (clicked) {
             if(shoot.x>1300 || shoot.x<300)
