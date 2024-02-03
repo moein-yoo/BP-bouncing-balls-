@@ -33,18 +33,21 @@ SDL_Texture *setting_page_scoreboard = nullptr; SDL_Texture *setting_page_change
 SDL_Texture *setting_page_sound_on = nullptr;SDL_Texture *setting_page_volume = nullptr;
 SDL_Texture *cannon_img = nullptr;
 SDL_Texture *pause_page = nullptr;SDL_Texture *pause_page_resume = nullptr;  SDL_Texture *pause_page_pause = nullptr;
+SDL_Texture *bomb_img = nullptr;SDL_Texture *laser_img = nullptr;
 
 Mix_Music *game_over_music = nullptr;   Mix_Music *win_music = nullptr;
 Mix_Music *soundnum0 = nullptr; Mix_Music *soundnum1 = nullptr;
 Mix_Music *soundnum2 = nullptr; Mix_Music *soundnum3 = nullptr;
+Mix_Chunk *pop_music = nullptr; Mix_Chunk *explosion_music = nullptr; Mix_Chunk *ignite_music = nullptr;
+Mix_Chunk *laser_music = nullptr;
 
 SDL_Event *e = new SDL_Event();
 int K = 1;
 int W = K*1600, H = K*900;
 double radious = 25;
 int tedadhazf = 0;double maxY = 25,Miny = 300;
-bool sound = true;int soundnum = 3;int volumee = 64;string username;
-double dx,dy;double x_m,y_m;int a,b,c;int emtiaz = 0;
+bool sound = true;int soundnum = 3;int volumee = 64;string username,username_mov;
+double dx,dy;double x_m,y_m;int a,b,c;int emtiaz = 0;int zaman = 120;bool hitting_process = false;
 
 struct ball{
     double x,y;
@@ -56,7 +59,7 @@ struct ball{
 struct rang {
     int code;
     int v;
-};rang color[6]={{static_cast<int>(0xffff9000),0}, {static_cast<int>(0xff0090ff),0},{static_cast<int>(0xff9000ff), 0},{static_cast<int>(0xff90ff00),0},{static_cast<int>(0xff00ff90),0},{static_cast<int>(0xff63637e),0}};
+};rang color[9]={{static_cast<int>(0xffff9000),0}, {static_cast<int>(0xff0090ff),0},{static_cast<int>(0xff9000ff), 0},{static_cast<int>(0xff90ff00),0},{static_cast<int>(0xff00ff90),0},{static_cast<int>(0xff63637e),0}, {1,1}, {2, 1}, {3, 1}};
 
 //font=2 -> Arial rounded bold
 //############*************  MOEIN  *************##############
@@ -88,9 +91,12 @@ double cannon_angle(double x,double y);
 void hit();
 void create_shoot();
 void help();
+void bomb();
+void leizer();
 //############*************  EMAD  *************##############
 bool bazi = true, running = true, bazi_infinity = false, bazi_normal = true, bazi_timer = false, gameover = false;
-
+std::chrono::steady_clock::time_point beginn = std::chrono::steady_clock::now();
+std::chrono::steady_clock::time_point endd = std::chrono::steady_clock::now();
 int main( int argc, char * argv[] ){
     srand(time(nullptr));
     player_file.open(R"(C:\Users\moein\Desktop\SUT\BP\project\moeindo\cmake-build-debug\player_file.txt)",ios::in);
@@ -100,7 +106,6 @@ int main( int argc, char * argv[] ){
         player_data[0].push_back(t1);
         player_data[1].push_back(t2);
         player_name.push_back(s);
-        cout << s;
     }
     a = rand()%5;b = rand()%5;
     Uint32 SDL_flags = SDL_INIT_VIDEO | SDL_INIT_TIMER ;
@@ -144,6 +149,8 @@ int main( int argc, char * argv[] ){
     pause_page = IMG_LoadTexture(m_renderer, R"(aks ha\pause_page.jpg)");
     pause_page_pause = IMG_LoadTexture(m_renderer, R"(aks ha\pause_page_pause.png)");
     pause_page_resume = IMG_LoadTexture(m_renderer, R"(aks ha\pause_page_resume.png)");
+    bomb_img = IMG_LoadTexture(m_renderer, R"(aks ha\bomb.png)");
+    laser_img = IMG_LoadTexture(m_renderer, R"(aks ha\laser_img.png)");
 
     game_over_music = Mix_LoadMUS(R"(music ha\game_over_music.mp3)");
     win_music = Mix_LoadMUS(R"(music ha\win_music.mp3)");
@@ -151,21 +158,26 @@ int main( int argc, char * argv[] ){
     soundnum1 = Mix_LoadMUS(R"(music ha\soundnum1.mp3)");
     soundnum2 = Mix_LoadMUS(R"(music ha\soundnum2.mp3)");
     soundnum3 = Mix_LoadMUS(R"(music ha\soundnum3.mp3)");
+    pop_music = Mix_LoadWAV(R"(music ha\pop.wav)");
+    ignite_music = Mix_LoadWAV(R"(music ha\ignite.wav)");
+    explosion_music = Mix_LoadWAV(R"(music ha\explosion.wav)");
+    laser_music = Mix_LoadWAV(R"(music ha\laser.wav)");
     sound_play();
     sound = true;
-
+    username.clear();
+    emtiaz = 0;
     while(running){
         bazi_infinity=false;bazi_normal = false;bazi_timer = false;bazi = false;
         e->type = 0;
-        for (int i = 0; i < player_name.size(); ++i) {
-            if(player_name[i] == username) {
-                if (emtiaz == 0)
-                    emtiaz = player_data[0][i];
-                else
-                    player_data[0][i] = emtiaz;
-            }
-
-        }
+//        for (int i = 0; i < player_name.size(); ++i) {
+//            if(player_name[i] == username) {
+//                if (emtiaz == 0)
+//                    emtiaz = player_data[0][i];
+//                else
+//                    player_data[0][i] = emtiaz;
+//            }
+//
+//        }
         toop.clear();
         print_asli();
         main_menu();
@@ -182,7 +194,10 @@ int main( int argc, char * argv[] ){
         chase_mouse_menu(x_m,y_m);
         if(!running)
             break;
-        if(bazi)game_render();
+        if(bazi){
+            game_render();
+            beginn = std::chrono::steady_clock::now();
+        }
         while(bazi){
             if(shoot.y != 875)
                 create_shoot();
@@ -191,6 +206,8 @@ int main( int argc, char * argv[] ){
                 sound_play();
             }
             e->type = 0;
+            hitting_process = false;
+
             while(e->type != SDL_MOUSEBUTTONDOWN) {
                 if (sound && !Mix_PlayingMusic()) {
                     soundnum = (soundnum + 1) % 4;
@@ -210,9 +227,15 @@ int main( int argc, char * argv[] ){
                 x_m = e->button.x;
                 y_m = e->button.y;
 
+                if(zaman - std::chrono::duration_cast<std::chrono::seconds>(endd - beginn).count()<=0 && bazi_timer)
+                    break;
                 if(maxY > 775){
                     break;
                 }
+            }
+            if(zaman - std::chrono::duration_cast<std::chrono::seconds>(endd - beginn).count()<=0 && bazi_timer) {
+                game_over();
+                break;
             }
             if(maxY > 775){
                 game_over();
@@ -224,20 +247,44 @@ int main( int argc, char * argv[] ){
             if(x_m<300){
                 pause();
             }
+            hitting_process = false;
             if(x_m>300 && x_m<1300){
                 dx =  (x_m - W / 2) * -7/ (y_m - H);
                 dy = -7.0;
+                hitting_process = true;
+                Mix_PlayChannel(-1,pop_music,0);
                 hit();
                 bool run = false;
                 e->type = 0;
-
                 search_vec(shoot);
-                if(tedadhazf<3){
+                if(shoot.rang!=1 && shoot.rang!=2)
+                    Mix_PlayChannel(-1,pop_music,0);
+                if(shoot.rang == 1) {
+                    bomb();
+                    Mix_PlayChannel(-1,explosion_music,0);
+                    if(tedadhazf < 2) {
+                        emtiaz -= (2 - tedadhazf) * 10;
+                        tedadhazf = 2;
+                    }
+                }
+                if(shoot.rang == 2) {
+                    Mix_PlayChannel(-1,laser_music,0);
+                    leizer();
+                }
+                if(shoot.rang == 3){
+                    Mix_PlayChannel(-1,pop_music,0);
+                    for (auto & i : toop) {
+                        if(pow((i.x-shoot.x),2)+pow((i.y-shoot.y),2)<=pow((2*radious),2))
+                            search_vec(i);
+                    }
+                }
+                if(tedadhazf<2){
                     for (auto & i : toop) {
                         i.flagcheck = false;
                     }
                     shoot.flagcheck = false;
-                    toop.push_back(shoot);
+                    if(shoot.rang!=1 && shoot.rang!=2 && shoot.rang!=3)
+                        toop.push_back(shoot);
                     tedadhazf = 0;
                 }
                 for (int i = 0; i < toop.size(); ++i) {
@@ -264,7 +311,13 @@ int main( int argc, char * argv[] ){
                     i.flagcheck = false;
                 }
                 emtiaz += 10*tedadhazf;
-                tedadhazf = 1;
+                if(shoot.rang == 1)
+                    emtiaz -= 50;
+                if(shoot.rang == 2)
+                    emtiaz -= 40;
+                if(shoot.rang == 3)
+                    emtiaz -= 30;
+                tedadhazf =0;
                 //bombing(x,y);
                 SDL_RenderPresent(m_renderer);
                 if(e->key.keysym.sym == SDLK_0)
@@ -274,6 +327,7 @@ int main( int argc, char * argv[] ){
                     break;
                 }
                 if(toop.empty()){
+                    emtiaz -= std::chrono::duration_cast<std::chrono::seconds>(endd - beginn).count();
                     win();
                     break;
                 }
@@ -305,11 +359,17 @@ int main( int argc, char * argv[] ){
     SDL_DestroyTexture(setting_page_change_music);SDL_DestroyTexture(setting_page_scoreboard);
     SDL_DestroyTexture(setting_page_sound_off);SDL_DestroyTexture(setting_page_sound_on);
     SDL_DestroyTexture(setting_page_volume);SDL_DestroyTexture(win_page);
+    SDL_DestroyTexture(bomb_img);
+    SDL_DestroyTexture(laser_img);
 
     SDL_DestroyTexture(infinity_mode);SDL_DestroyTexture(timer_mode);SDL_DestroyTexture(normal_mode);
 
     Mix_FreeMusic(game_over_music);Mix_FreeMusic(soundnum0);Mix_FreeMusic(soundnum1);
     Mix_FreeMusic(soundnum2);Mix_FreeMusic(soundnum3);Mix_FreeMusic(win_music);
+    Mix_FreeChunk(pop_music);
+    Mix_FreeChunk(explosion_music);
+    Mix_FreeChunk(ignite_music);
+    Mix_FreeChunk(laser_music);
     Mix_CloseAudio();
     SDL_DestroyWindow( m_window );
     SDL_DestroyRenderer( m_renderer );
@@ -392,24 +452,26 @@ void print_top(){
             maxY = i.y;
     }
     int xx = 325;
-    while(Miny==25 && xx<=1300 && bazi_infinity){
-        Miny = -25;
-        ball jadid;
-        int k = rand()%2,rang = rand()%5;
-        jadid.x = xx;
-        xx+=50;
-        jadid.y = -25;
-        if(k!=0) {
-            k--;
+    if(Miny>=25) {
+        while (xx <= 1300 && bazi_infinity) {
+                Miny = -25;
+                ball jadid;
+                int k = rand() % 2, rang = rand() % 5;
+                jadid.x = xx;
+                xx += 50;
+                jadid.y = -25;
+                if (k != 0) {
+                    k--;
+                } else {
+                    k = rand() % 3;
+                    rang = rand() % 5;
+                }
+                jadid.rang = color[rang].code;
+                color[rang].v = 1;
+                jadid.gofl = false;
+                jadid.flagcheck = false;
+                toop.push_back(jadid);
         }
-        else{
-            k = rand()%3;
-            rang = rand()%5;
-        }
-        jadid.rang = color[rang].code;
-        color[rang].v = 1;
-        jadid.flagcheck = false;
-        toop.push_back(jadid);
     }
     for (int i = 0; i < 5; ++i) {
         while(shoot.rang==color[i].code && !color[i].v){
@@ -423,9 +485,24 @@ void print_top(){
     vlineRGBA(m_renderer,300,Miny-26,800,126,99,99,255);
     vlineRGBA(m_renderer,1300,Miny-26,800,126,99,99,255);
     SDL_Delay(10);
+    if(bazi_timer){
+        endd = std::chrono::steady_clock::now();
+        string ss = "seconds left : " + to_string(zaman - std::chrono::duration_cast<std::chrono::seconds>(endd - beginn).count());
 
-    string ss = "Score : "+to_string(emtiaz);
-    textRGBA(m_renderer,50,100,ss.c_str(),2,40,150,50,50,255);
+        textRGBA(m_renderer,50,300,ss.c_str(),2,40,150,50,50,255);
+
+        //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - beginn).count() << " [Âµs]" << std::endl;
+
+    }
+    else{
+        endd = std::chrono::steady_clock::now();
+        string ss = "seconds : " + to_string(std::chrono::duration_cast<std::chrono::seconds>(endd - beginn).count());
+
+        textRGBA(m_renderer,50,300,ss.c_str(),2,40,150,50,50,255);
+
+    }
+    string ss = "Score : "+to_string(emtiaz) + " for " + username;
+    textRGBA(m_renderer,50,100,ss.c_str(),2,20,150,50,50,255);
     SDL_RenderPresent(m_renderer);
 }
 
@@ -582,12 +659,13 @@ void game_render(){
 //    SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
 //    SDL_Rect exit_rect; exit_rect.x = 1400; exit_rect.y = 700; exit_rect.w = w_exit; exit_rect.h = h_exit;
 //    SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
-    filledCircleColor(m_renderer,shoot.x,shoot.y,radious,shoot.rang);
-    int w_pause_page_pause,h_pause_page_pause;
-    SDL_QueryTexture(pause_page_pause, nullptr, nullptr, &w_pause_page_pause, &h_pause_page_pause);
-    SDL_Rect pause_page_pause_rect; pause_page_pause_rect.x = 100; pause_page_pause_rect.y = 450; pause_page_pause_rect.w = w_pause_page_pause; pause_page_pause_rect.h = h_pause_page_pause;
-    SDL_RenderCopy(m_renderer, pause_page_pause, nullptr, &pause_page_pause_rect);
-    filledCircleColor(m_renderer,shoot.x,shoot.y,radious,shoot.rang);
+    if(shoot.rang==1){
+        int w_bomb,h_bomb;
+        SDL_QueryTexture(bomb_img,nullptr,nullptr,&w_bomb,&h_bomb);
+        SDL_Rect bomb_img_rect; bomb_img_rect.x = shoot.x-30; bomb_img_rect.y = shoot.y-40; bomb_img_rect.w = w_bomb; bomb_img_rect.h = h_bomb;
+        SDL_RenderCopy(m_renderer,bomb_img,nullptr,&bomb_img_rect);
+        //filledCircleColor(m_renderer,shoot.x,shoot.y,radious,0xffffffff);
+    }
     int w_cannon_img,h_cannon_img;
     SDL_QueryTexture(cannon_img, NULL, NULL, &w_cannon_img, &h_cannon_img);
     SDL_Rect img_rect;
@@ -596,7 +674,30 @@ void game_render(){
     img_rect.w = w_cannon_img;
     img_rect.h = h_cannon_img;
     SDL_Point center = {img_rect.w / 2, img_rect.h};
-    SDL_RenderCopyEx(m_renderer, cannon_img, NULL, &img_rect, cannon_angle(x_m, y_m), &center, SDL_FLIP_NONE);
+    if(shoot.rang==2){
+        int w_laser_img,h_laser_img;
+        SDL_QueryTexture(laser_img,nullptr,nullptr,&w_laser_img,&h_laser_img);
+        SDL_Rect laser_img_rect; laser_img_rect.x = shoot.x-25; laser_img_rect.y = shoot.y - 25; laser_img_rect.w = w_laser_img/2; laser_img_rect.h = h_laser_img/2;
+        if(!hitting_process)
+            SDL_RenderCopyEx(m_renderer, laser_img, NULL, &laser_img_rect, cannon_angle(x_m, y_m), &center, SDL_FLIP_NONE);
+        else
+            SDL_RenderCopyEx(m_renderer, laser_img, NULL, &laser_img_rect, cannon_angle(dx+W/2, dy+H), &center, SDL_FLIP_NONE);
+    }
+    if(shoot.rang==3){
+        filledPieColor(m_renderer,shoot.x,shoot.y,radious,0,72,color[0].code);
+        filledPieColor(m_renderer,shoot.x,shoot.y,radious,72,144,color[1].code);
+        filledPieColor(m_renderer,shoot.x,shoot.y,radious,144,216,color[2].code);
+        filledPieColor(m_renderer,shoot.x,shoot.y,radious,216,288,color[3].code);
+        filledPieColor(m_renderer,shoot.x,shoot.y,radious,288,360,color[4].code);
+    }
+    else
+        filledCircleColor(m_renderer,shoot.x,shoot.y,radious,shoot.rang);
+    int w_pause_page_pause,h_pause_page_pause;
+    SDL_QueryTexture(pause_page_pause, nullptr, nullptr, &w_pause_page_pause, &h_pause_page_pause);
+    SDL_Rect pause_page_pause_rect; pause_page_pause_rect.x = 100; pause_page_pause_rect.y = 450; pause_page_pause_rect.w = w_pause_page_pause; pause_page_pause_rect.h = h_pause_page_pause;
+    SDL_RenderCopy(m_renderer, pause_page_pause, nullptr, &pause_page_pause_rect);
+    if(shoot.rang != 2)
+        SDL_RenderCopyEx(m_renderer, cannon_img, NULL, &img_rect, cannon_angle(x_m, y_m), &center, SDL_FLIP_NONE);
     filledCircleColor(m_renderer,W/2-100,875,radious,color[b].code);
     //SDL_RenderPresent(m_renderer);
 
@@ -685,22 +786,23 @@ void login() {
             c = check_char();
 
             if(c==';') {
-                if (!username.empty())
-                    username.pop_back();
+                if (!username_mov.empty())
+                    username_mov.pop_back();
             }
             else if(c!=':')
-                username += c;
+                username_mov += c;
         }
         else{
             bool m = false;
             for (int i = 0;i < player_name.size(); ++i) {
-                if(player_name[i]==username){
+                if(player_name[i]==username_mov){
                     SDL_RenderClear(m_renderer);
                     SDL_RenderCopy(m_renderer, login_page, nullptr, &login_page_rect);
                     SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
                     textRGBA(m_renderer,600,100,"Logged in successfully!",2,30,150,50,50,255);
                     emtiaz = player_data[0][i];
-                    //username.clear();
+                    username = username_mov;
+                    username_mov.clear();
                     SDL_RenderPresent(m_renderer);
                     m = true;
                     break;
@@ -721,8 +823,8 @@ void login() {
             SDL_RenderClear(m_renderer);
             SDL_RenderCopy(m_renderer, login_page, nullptr, &login_page_rect);
             SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
-            if (!username.empty())
-                textRGBA(m_renderer, 600, 100, username.c_str(), 2, 30, 150, 50, 50, 255);
+            if (!username_mov.empty())
+                textRGBA(m_renderer, 600, 100, username_mov.c_str(), 2, 30, 150, 50, 50, 255);
             SDL_RenderPresent(m_renderer);
         }
     }
@@ -819,13 +921,15 @@ void scoreboard_p(){
     SDL_QueryTexture(setting_page,nullptr,nullptr,&w,&h);
     SDL_Rect setting_page_rect; setting_page_rect.x = 0; setting_page_rect.y = 0; setting_page_rect.w = 1600; setting_page_rect.h = 900;
     SDL_RenderCopy(m_renderer,setting_page,nullptr,&setting_page_rect);
+    int tttt = 0;
     for (int i = 0; i < player_name.size(); ++i) {
         if(player_name[i].empty())
             continue;
         string tt = player_name[i];
-        textRGBA(m_renderer,200,i*50+50,tt.c_str(),2,40,126,99,99,255);
+        textRGBA(m_renderer,200,tttt*50+50,tt.c_str(),2,40,126,99,99,255);
         tt = to_string(player_data[0][i]);
-        textRGBA(m_renderer,700,i*50+50,tt.c_str(),2,40,126,99,99,255);
+        textRGBA(m_renderer,700,tttt*50+50,tt.c_str(),2,40,126,99,99,255);
+        tttt++;
     }
     int w_exit,h_exit;
     SDL_QueryTexture(exit_img, nullptr, nullptr, &w_exit, &h_exit);
@@ -877,6 +981,7 @@ void mode() {
         }
         else if (x > 910 && x < 910 + w_timer && y > 170 && y < 170 + h_timer) {
             bazi_timer = true;
+            bazi = true;
         }
         else if (x > 730 && x < 730 + w_normal && y > 70 && y < 70 + h_normal) {
             bazi_normal = true;
@@ -917,16 +1022,16 @@ void sign_up(){
         if(e->key.keysym.sym != SDLK_TAB) {
             c = check_char();
             if(c==';') {
-                if (!username.empty())
-                    username.pop_back();
+                if (!username_mov.empty())
+                    username_mov.pop_back();
             }
             else if(c!=':')
-                username += c;
+                username_mov += c;
         }
         else{
             bool m = false;
             for (const auto & i : player_name) {
-                if(i==username && !username.empty()){
+                if(i==username_mov && !username_mov.empty()){
                     m = true;
                     break;
                 }
@@ -937,16 +1042,17 @@ void sign_up(){
                 SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
                 textRGBA(m_renderer,600,100,"This username exists, use another one!",2,30,150,50,50,255);
                 SDL_RenderPresent(m_renderer);
-                break;
+                //break;
             }
             else{
                 SDL_RenderClear(m_renderer);
                 SDL_RenderCopy(m_renderer, sign_up_page, nullptr, &sign_up_page_rect);
                 SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
                 textRGBA(m_renderer,600,100,"Username created!",2,30,150,50,50,255);
-                if(!username.empty()) {
-                    player_name.push_back(username);
-                //    username.clear();
+                if(!username_mov.empty()) {
+                    player_name.push_back(username_mov);
+                    username = username_mov;
+                    username_mov.clear();
                     player_data[0].push_back(0);
                     player_data[1].push_back(0);
                 }
@@ -958,8 +1064,8 @@ void sign_up(){
             SDL_RenderClear(m_renderer);
             SDL_RenderCopy(m_renderer, sign_up_page, nullptr, &sign_up_page_rect);
             SDL_RenderCopy(m_renderer, exit_img, nullptr, &exit_rect);
-            if (!username.empty())
-                textRGBA(m_renderer, 600, 100, username.c_str(), 2, 30, 150, 50, 50, 255);
+            if (!username_mov.empty())
+                textRGBA(m_renderer, 600, 100, username_mov.c_str(), 2, 30, 150, 50, 50, 255);
             SDL_RenderPresent(m_renderer);
         }
     }
@@ -992,8 +1098,12 @@ void game_over(){
     SDL_RenderCopy(m_renderer, game_over_page, nullptr, &game_over_page_rect);
     Mix_PlayMusic(game_over_music, 0);
     for (int i = 0; i < player_name.size(); ++i) {
-        if(username == player_name[i])
-            emtiaz = player_data[0][i];
+        if(username == player_name[i]) {
+            if (!bazi_infinity)
+                emtiaz = player_data[0][i];
+            else
+                player_data[0][i] = emtiaz;
+        }
     };
 //    string ss = "Your score is "+to_string(emtiaz);
 //    textRGBA(m_renderer,600,100,ss.c_str(),2,40,150,50,50,255);
@@ -1010,7 +1120,10 @@ void win(){
     Mix_PlayMusic(win_music, 0);
     string ss = "Your score is "+to_string(emtiaz);
     textRGBA(m_renderer,600,100,ss.c_str(),2,40,150,50,50,255);
-
+    for (int i = 0; i < player_name.size(); ++i) {
+        if(username == player_name[i])
+            player_data[0][i] = emtiaz;
+    }
     SDL_RenderPresent(m_renderer);
     while(Mix_PlayingMusic());
     gameover = true;
@@ -1258,6 +1371,9 @@ double cannon_angle(double x, double y) {
 }
 
 void hit() {
+    if(shoot.rang==1 && !Mix_PlayingMusic()){
+        Mix_PlayChannel(-1,ignite_music,0);
+    }
     bool clicked = true;
     while (clicked) {
         for (auto & i : toop) {
@@ -1269,11 +1385,11 @@ void hit() {
         if(shoot.y<=Miny) {
             clicked = false;
             shoot.y = Miny;
-            shoot.flagcheck = false;
-            toop.push_back(shoot);
+//            shoot.flagcheck = false;
+//            toop.push_back(shoot);
         }
         if (clicked) {
-            if(shoot.x>1300 || shoot.x<300)
+            if(shoot.x>1275 || shoot.x<325)
                 dx *= -1;
             shoot.x += dx;
             shoot.y += dy;
@@ -1283,9 +1399,9 @@ void hit() {
 }
 void create_shoot(){
     do{
-        c=rand()%5;
+        c=rand()%9;
     }
-    while(!color[c].v);
+    while(!color[c].v || c==5);
     a=b;
     b=c;
     shoot.x=W/2;
@@ -1301,5 +1417,23 @@ void help(){
         filledCircleColor(m_renderer, shoot.x+i*dx, shoot.y-i*dy, 0.2, 0xff000000);
         if(shoot.x+i*dx >= x_m && shoot.y-i*dy<=y_m)
             break;
+    }
+}
+void bomb(){
+    for (auto & i : toop) {
+        if (pow((i.x-shoot.x),2)+pow((i.y-shoot.y),2)<=pow((5*radious),2)) {
+            i.flagcheck = true;tedadhazf++;
+        }
+    }
+}
+
+void leizer() {
+    for (auto &i: toop) {
+        if (((i.x-W/2) * (875-y_m) - (875-i.y) * (x_m-W/2)) /
+            sqrt(pow((y_m - 875), 2) + pow((x_m - W / 2), 2)) <= radious+5 &&
+            -radious-5 <= ((i.x-W/2) * (875-y_m) - (875-i.y) * (x_m-W/2)) /
+            sqrt(pow((y_m - 875), 2) + pow((x_m - W / 2), 2))) {
+            i.flagcheck = true;tedadhazf++;
+        }
     }
 }
