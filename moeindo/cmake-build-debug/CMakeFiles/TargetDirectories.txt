@@ -1,3 +1,0 @@
-C:/Users/moein/Desktop/SUT/BP/project/moeindo/cmake-build-debug/CMakeFiles/moeindo.dir
-C:/Users/moein/Desktop/SUT/BP/project/moeindo/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/moein/Desktop/SUT/BP/project/moeindo/cmake-build-debug/CMakeFiles/rebuild_cache.dir
