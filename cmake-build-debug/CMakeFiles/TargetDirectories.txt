@@ -1,0 +1,3 @@
+C:/Users/moein/iCloudDrive/SUT/S1/Basics of Programming/project/moeindo/cmake-build-debug/CMakeFiles/moeindo.dir
+C:/Users/moein/iCloudDrive/SUT/S1/Basics of Programming/project/moeindo/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/moein/iCloudDrive/SUT/S1/Basics of Programming/project/moeindo/cmake-build-debug/CMakeFiles/rebuild_cache.dir
